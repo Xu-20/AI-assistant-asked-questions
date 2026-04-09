@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Unity 初级工程师：AI 提问技巧（改错 / 重构 / 新增功能 / 分步修改）</title>
+  <style>
+    :root{
+      --text:#222; --muted:#555; --bg:#fff; --card:#fafafa;
+      --border:#e5e7eb; --codebg:#f6f8fa; --accent:#2563eb;
+    }
+    body{
+      font-family:"Microsoft YaHei","PingFang SC",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      max-width: 980px; margin: 40px auto; padding: 0 22px; color: var(--text);
+      line-height: 1.75; background: var(--bg);
+    }
+    h1,h2,h3{ color:#111; }
+    h1{ font-size: 32px; margin: 0 0 8px; }
+    .subtitle{ color: var(--muted); margin: 0 0 18px; }
+    h2{ font-size: 24px; margin-top: 34px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    h3{ font-size: 18px; margin-top: 22px; }
+    p{ margin: 10px 0; }
+    .tip{
+      background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid var(--accent);
+      padding: 10px 14px; border-radius: 10px; color:#0f172a;
+    }
+    .warn{
+      background: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #ea580c;
+      padding: 10px 14px; border-radius: 10px; color:#0f172a;
+    }
+    .card{
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 14px; margin: 14px 0;
+    }
+    pre{
+      white-space: pre-wrap; background: var(--codebg); padding: 14px; border-radius: 10px;
+      border: 1px solid var(--border); overflow:auto;
+    }
+    code{ font-family: Consolas, Menlo, Monaco, monospace; }
+    blockquote{
+      background: #fafafa; border-left: 4px solid #d0d7de; margin: 12px 0; padding: 10px 14px; border-radius: 10px;
+    }
+    ul,ol{ padding-left: 22px; }
+    .toc a{ color: var(--accent); text-decoration: none; }
+    .toc a:hover{ text-decoration: underline; }
+    .mini{ color: var(--muted); font-size: 13px; }
+    .kbd{ padding:2px 6px; border:1px solid var(--border); border-bottom-width: 2px; border-radius: 6px; background:#fff; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    hr{ border:none; border-top:1px solid var(--border); margin: 26px 0; }
+  </style>
+</head>
+<body>
+
+<h1>Unity 初级工程师：AI 提问技巧（更详细版）</h1>
+<p class="subtitle">重点覆盖：<strong>改错 / 重构 / 新增代码作用 / 分步修改（我确认后再继续）</strong>。可直接复制模板到 AI。</p>
+
+<blockquote>
+  对 Unity 工程师来说，AI 最值钱的地方不是替你思考，而是帮你更快完成<strong>思考、编码、排错、复盘</strong>。
+</blockquote>
+
+<div class="card toc">
+  <strong>目录</strong>
+  <ol>
+    <li><a href="#core">核心原则：让 AI 变成“加速器”</a></li>
+    <li><a href="#context">提问必填 8 个信息（不填就容易跑偏）</a></li>
+    <li><a href="#debug">改错（Bug 排查）高频模板：从“猜”变“验证”</a></li>
+    <li><a href="#refactor">重构模板：能跑但乱 → 可维护</a></li>
+    <li><a href="#feature">新增功能模板：最小可运行 + 可扩展</a></li>
+    <li><a href="#diff">让 AI 说明“新增/修改代码到底干了啥”（防止盲改）</a></li>
+    <li><a href="#step">分步修改 / 等我确认再继续（避免一次改太大）</a></li>
+    <li><a href="#checklist">万能检查清单：Unity 常见坑位</a></li>
+    <li><a href="#onepage">一页式万能模板（复制即用）</a></li>
+  </ol>
+</div>
+
+<h2 id="core">1) 核心原则：让 AI 变成“加速器”</h2>
+<div class="tip">
+  <p><strong>你负责方向，AI 负责加速。</strong> 你给目标、约束、上下文；AI 帮你更快写、改、查、复盘。</p>
+  <p class="mini">如果你只丢一句“帮我修一下”，AI 只能“猜”。你提供的信息越像 bug 报告 / 任务卡片，AI 越像靠谱队友。</p>
+</div>
+
+<div class="card">
+  <h3>三句“稳住不翻车”的指令（建议每次都带上）</h3>
+  <ul>
+    <li><strong>不要过度设计</strong>：只做当前需求，不要引入复杂架构/花哨模式。</li>
+    <li><strong>适合初级工程师理解</strong>：代码可读，变量命名清晰，带注释。</li>
+    <li><strong>先分析，再改代码</strong>：先列可能原因 + 验证步骤，再给最小修改方案。</li>
+  </ul>
+</div>
+
+<h2 id="context">2) 提问必填 8 个信息（不填就容易跑偏）</h2>
+<p>下面 8 条信息，能把“模糊提问”变成“工程对话”。你不一定都要填满，但<strong>越多越好</strong>：</p>
+
+<ol>
+  <li>Unity 版本（例：2022.3 LTS）</li>
+  <li>平台（PC / Android / iOS / WebGL）</li>
+  <li>2D / 3D / URP / HDRP</li>
+  <li>UI 方案（UGUI / UI Toolkit）</li>
+  <li>输入系统（旧 Input / New Input System）</li>
+  <li>目标（你想要的最终效果）</li>
+  <li>现象（目前发生了什么）</li>
+  <li>证据（报错全文、日志、相关代码、Inspector 配置截图文字说明）</li>
+</ol>
+
+<pre><code>环境：Unity 2022.3 LTS，PC，3D，URP，UGUI，New Input System
+目标：点击按钮打开背包面板，并刷新物品列表
+现象：点击按钮无反应（无报错）
+证据：
+- Button OnClick 已绑定到 UIManager.OpenBag()
+- BagPanel 初始为 inactive
+- 相关代码如下：...
+限制：不要过度设计，先给最小可运行修复方案</code></pre>
+
+<div class="warn">
+  <p><strong>重要：</strong>贴代码时建议只贴“相关最小片段”，但要包含：</p>
+  <ul>
+    <li>类名、字段、方法签名</li>
+    <li>调用链关键点（按钮→事件→方法→打开面板→刷新 UI）</li>
+    <li>报错全文（不要只贴第一行）</li>
+  </ul>
+</div>
+
+<h2 id="debug">3) 改错（Bug 排查）高频模板：从“猜”变“验证”</h2>
+<p>改错的本质是：<strong>先提出假设 → 再用最小代价验证 → 最后做最小修改</strong>。下面模板就是为了强制这个流程。</p>
+
+<div class="card">
+  <h3>模板 A：有报错（最常用）</h3>
+  <pre><code>我在 Unity 遇到报错，请按“先分析→再验证→再修改”的顺序帮我排查。
+
+环境：Unity 版本/平台/2D3D/渲染管线/输入系统/是否使用插件
+报错全文：
+【把 Console 的完整报错粘贴出来】
+
+复现步骤：
+1) ...
+2) ...
+3) ...
+
+预期：
+【你想发生什么】
+实际：
+【现在发生什么】
+
+相关代码（尽量最小但完整）：
+【贴脚本】
+
+Inspector/场景配置：
+- 哪个对象挂了脚本
+- 哪些引用拖拽了，哪些没拖
+- 对象是否 active，是否在 Prefab 里
+
+要求：
+1) 先列出 3 个最可能原因（按概率排序）
+2) 每个原因给一个“最快验证方法”（加日志/断点/检查 Inspector）
+3) 最后给出最小修改（不要重写整个功能）
+</code></pre>
+</div>
+
+<div class="card">
+  <h3>模板 B：没报错但没反应（Unity 特有高频）</h3>
+  <pre><code>Unity 没报错，但功能不工作。请用“排查清单 + 一步步验证”的方式帮我定位。
+
+环境：Unity 版本/输入系统/UI 方案
+功能：比如按钮点击、触发器、动画事件、协程等
+预期：...
+实际：...（无报错）
+
+相关代码：
+【贴相关脚本】
+
+Inspector 当前配置：
+- Button OnClick 是否绑定到正确对象/方法？
+- 对象是否 active？脚本是否 enabled？
+- 引用是否为空？
+
+请按这个顺序排查并告诉我每步怎么验证：
+1) 事件/回调是否真的触发（建议加 Debug.Log 的位置）
+2) 条件分支是否把逻辑挡住（if 早退、状态不对、layer/tag 不匹配）
+3) 引用是否丢失（Prefab override、脚本重命名、场景对象没拖拽）
+4) 生命周期问题（Awake/Start/OnEnable 执行顺序）
+5) UI 交互被挡（Raycast Target、Canvas Group、层级遮挡）
+</code></pre>
+</div>
+
+<div class="card">
+  <h3>模板 C：NullReferenceException（别再只听“对象为空”）</h3>
+  <pre><code>我遇到 NullReferenceException。请你结合代码告诉我：
+1) 最可能为空的是哪一个引用（指出具体变量）
+2) 为什么会为空（初始化时机/没拖引用/对象被销毁）
+3) 去哪里修：Inspector？Prefab？代码初始化？
+4) 给我 2 种修法：快速修复 + 更稳的工程写法（仍然不要过度设计）
+5) 给我加日志定位的建议（具体插在哪几行）
+
+报错全文：
+【贴 Console 里完整堆栈】
+
+代码：
+【贴对应脚本】</code></pre>
+</div>
+
+<div class="card">
+  <h3>模板 D：性能/卡顿类问题（Update、GC、Instantiate）</h3>
+  <pre><code>我怀疑某段 Unity 代码导致卡顿/掉帧，请帮我定位“最值得先改的 20%”。
+
+环境：Unity 版本/平台/目标帧率/是否开 Development Build
+现象：什么时候卡？（进入场景/战斗/打开 UI/大量单位时）
+我做过的观察：Profiler 看到哪一块高？（CPU/GC/Render）
+
+代码（可贴关键 Update/循环/Instantiate 部分）：
+【贴代码】
+
+要求：
+1) 先指出最可能的 3 个性能雷区（按优先级）
+2) 给每个雷区一个“快速验证方法”（Profiler 指标/日志/计时）
+3) 给最小改动优化方案（避免过度优化）</code></pre>
+</div>
+
+<div class="card">
+  <h3>模板 E：让 AI 反过来问你问题（适合你不确定怎么描述）</h3>
+  <pre><code>我遇到 Unity 问题，但我描述不清。请你先像资深工程师一样问我 8~12 个澄清问题，
+每个问题说明“为什么要问”和“答案会影响什么排查方向”。
+等我回答后你再给排查方案。</code></pre>
+</div>
+
+<h2 id="refactor">4) 重构模板：能跑但乱 → 可维护</h2>
+<p>重构要避免“重写”。初级阶段最值钱的重构目标是：</p>
+<ul>
+  <li>脚本职责更清晰（一个脚本一件事）</li>
+  <li>少写重复代码（复制粘贴就是未来的 bug）</li>
+  <li>更容易调试（关键逻辑能打点、能定位）</li>
+</ul>
+
+<div class="card">
+  <h3>模板 R1：代码能跑但结构乱</h3>
+  <pre><code>这段 Unity C# 能跑，但结构乱。我希望重构后更清晰、更好维护。
+
+约束：不要过度设计，不引入复杂架构；适合初级工程师理解。
+目标：
+1) 一个脚本一个职责
+2) 降低耦合（不要到处 Find / 单例乱用）
+3) 仍然方便 Inspector 配置
+4) 尽量少改现有行为（不改变功能）
+
+请输出：
+- 原代码的问题清单（按严重程度）
+- 重构方案（拆成哪些脚本、每个负责什么）
+- 关键改动点（为什么这么改）
+- 重构后的完整代码
+- 迁移步骤（我应该先改哪一步，怎么验证没改坏）
+
+原代码：
+【贴代码】</code></pre>
+</div>
+
+<div class="card">
+  <h3>模板 R2：把大脚本拆小（常见于 UIManager、GameManager）</h3>
+  <pre><code>我有一个 Unity 脚本太大了（上百行/上千行）。请帮我拆分职责。
+
+请你：
+1) 先按功能块给我划分（比如：输入、移动、动画、音效、UI、数据）
+2) 建议拆成 2~5 个脚本（不要拆太碎）
+3) 说明脚本之间怎么通信（直接引用 / 事件 / 回调），选最简单可靠的
+4) 给出拆分后的代码骨架（类名、字段、方法、注释）
+5) 给迁移步骤：先抽哪个模块最安全
+
+代码：
+【贴代码】</code></pre>
+</div>
+
+<div class="card">
+  <h3>模板 R3：重构时顺便补“可测试的日志点”</h3>
+  <pre><code>请帮我在不改变功能的前提下重构，并增加“关键日志点”，让我更容易定位问题。
+
+要求：
+- 日志点要少但关键（状态变化、事件触发、条件早退）
+- 需要告诉我每个日志点“用来验证什么假设”
+- 日志要可开关（比如一个 bool 开关或 #if UNITY_EDITOR）
+
+代码：
+【贴代码】</code></pre>
+</div>
+
+<h2 id="feature">5) 新增功能模板：最小可运行 + 可扩展</h2>
+<p>新增功能最容易踩坑：一次要太多，导致 AI 给你“半成品大工程”。正确做法：先做 MVP（最小可运行），再迭代。</p>
+
+<div class="card">
+  <h3>模板 F1：先做最小可运行版本（MVP）</h3>
+  <pre><code>请帮我实现【功能名】的“最小可运行版本”，适合 Unity 初级工程师。
+
+环境：Unity 版本/2D3D/UI/输入系统
+需求（只写必须的）：
+1) ...
+2) ...
+3) ...
+
+约束：
+- 不要过度设计
+- 只拆 2~4 个脚本
+- 每个脚本职责清晰
+- 给出 Inspector 挂载说明 + 场景对象怎么创建
+- 给测试步骤（我怎么验证它是对的）
+
+输出格式：
+1) 思路（1~2 屏以内）
+2) 脚本拆分
+3) 完整代码
+4) 挂载 & Inspector
+5) 测试步骤
+6) 下一步可扩展点（不要立刻实现）</code></pre>
+</div>
+
+<div class="card">
+  <h3>模板 F2：在现有项目里新增（避免破坏旧逻辑）</h3>
+  <pre><code>我想在现有 Unity 项目里新增功能，但担心改坏旧逻辑。
+
+现状：
+- 现有脚本：A/B/C（它们的职责）
+- 现在的调用流程：...（简单描述）
+
+新需求：
+【描述你要加什么】
+
+请你：
+1) 先指出哪些地方“最容易被改坏”
+2) 给一个“最小侵入式”方案（尽量少改旧代码）
+3) 如果必须改旧代码，请用“补丁式”修改（告诉我改哪几行）
+4) 给我验证清单：改完我应该测试哪些场景</code></pre>
+</div>
+
+<h2 id="diff">6) 让 AI 说明“新增/修改代码到底干了啥”（防止盲改）</h2>
+<p>很多新手最大风险是：复制 AI 代码就跑，跑不通继续复制，最后自己也不知道发生了什么。</p>
+
+<div class="tip">
+  <p><strong>建议养成习惯：</strong>每次让 AI 给你代码时，追加一句：<strong>“请解释你改动的每一处目的和影响。”</strong></p>
+</div>
+
+<div class="card">
+  <h3>模板 D1：解释新增代码的作用（按“输入→处理→输出”）</h3>
+  <pre><code>请你解释下面这段新增/修改的 Unity C# 代码的作用：
+- 它解决了什么问题？
+- 输入是什么？（有哪些参数/字段/外部依赖）
+- 关键逻辑是什么？（逐段解释）
+- 输出/副作用是什么？（修改了哪些状态、触发了哪些事件、影响哪些对象）
+- 哪些地方最容易出 bug？我该怎么测试？
+
+代码：
+【贴代码】</code></pre>
+</div>
+
+<div class="card">
+  <h3>模板 D2：用“变更说明（ChangeLog）”输出（适合提交前）</h3>
+  <pre><code>我准备把下面的修改提交到 Git。请你输出一份简洁但完整的变更说明：
+1) 改了什么（要点列表）
+2) 为什么这么改（动机）
+3) 风险点（可能破坏哪些地方）
+4) 回归测试清单（我应该测试哪些功能）
+5) 如果要回滚，最小回滚方式是什么
+
+修改内容：
+【贴代码或贴 diff】</code></pre>
+</div>
+
+<div class="card">
+  <h3>模板 D3：让 AI 给“对比前后差异”的解释（你只贴前后两个版本）</h3>
+  <pre><code>下面是同一个脚本的“修改前”和“修改后”。
+请你按差异逐条解释：每一处修改的目的、影响、风险和测试点。
+
+修改前：
+【贴 old】
+
+修改后：
+【贴 new】</code></pre>
+</div>
+
+<h2 id="step">7) 分步修改 / 等我确认再继续（避免一次改太大）</h2>
+<p>你提到“修改等待”，最实用的做法是：让 AI 按步骤给方案，每一步都等你确认再进行下一步（像结对编程）。</p>
+
+<div class="card">
+  <h3>模板 S1：分步修复（每步都等我反馈）</h3>
+  <pre><code>请你像结对编程一样帮我修这个问题：
+- 先给第 1 步“最小验证动作”（比如加 2 行日志/检查 1 个 Inspector 引用）
+- 我执行后把结果反馈给你
+- 你再给第 2 步
+注意：每次只给 1 步，并在结尾用“请把结果贴给我”收尾。
+
+问题描述：
+【贴现象/报错/代码】</code></pre>
+</div>
+
+<div class="card">
+  <h3>模板 S2：分步重构（每次只动一小块）</h3>
+  <pre><code>请你按“安全的小步重构”指导我：
+1) 每次只改一个小点（例如抽一个方法/拆一个类）
+2) 每一步都告诉我：要改哪里、改完怎么验证没坏
+3) 我确认通过后你再给下一步
+
+代码：
+【贴代码】</code></pre>
+</div>
+
+<div class="card">
+  <h3>模板 S3：先给方案，再等我选（避免 AI 自作主张）</h3>
+  <pre><code>请先给我 2~3 种可行方案（从简单到稍规范），
+每种说明：改动范围、优缺点、风险点。
+等我选定后，你再写代码/给补丁。</code></pre>
+</div>
+
+<h2 id="checklist">8) 万能检查清单：Unity 常见坑位</h2>
+<p>当你不知道从哪排查时，把下面清单贴给 AI，让它逐项带你验证：</p>
+
+<div class="card">
+  <h3>事件 & 引用</h3>
+  <ul>
+    <li>对象是否 <strong>active</strong>？脚本是否 <strong>enabled</strong>？</li>
+    <li>Inspector 引用是否丢失（Prefab override / 脚本改名）？</li>
+    <li>UI Button OnClick 是否绑定到 <strong>场景里那一个实例</strong>？（不是 Project 里的 Prefab）</li>
+    <li>Raycast 是否被挡（Canvas Group / Image Raycast Target / 层级遮挡）？</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>生命周期 & 时机</h3>
+  <ul>
+    <li>初始化写在 <code>Awake</code> 还是 <code>Start</code>？对象启用顺序会影响吗？</li>
+    <li>对象是否在运行时被 Destroy / SetActive(false)？</li>
+    <li>协程是否被停止（StopAllCoroutines / 对象失活）？</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>物理 & 碰撞</h3>
+  <ul>
+    <li>Collider 是否勾选了 <strong>Is Trigger</strong>？Rigidbody 是否缺失？</li>
+    <li>Layer 碰撞矩阵是否允许？Tag/Layer 是否匹配？</li>
+    <li>2D / 3D API 是否混用（OnTriggerEnter vs OnTriggerEnter2D）？</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>性能 & GC</h3>
+  <ul>
+    <li><code>Update</code> 里是否有 Find / GetComponent / LINQ / 字符串拼接？</li>
+    <li>是否频繁 Instantiate/Destroy（考虑对象池，但先确认真有问题）？</li>
+    <li>UI 刷新是否每帧重建（Layout Rebuild）？</li>
+  </ul>
+</div>
+
+<h2 id="onepage">9) 一页式万能模板（复制即用）</h2>
+<pre><code>我是 Unity 初级工程师，请你帮我【改错 / 重构 / 新增功能】。
+要求：不要过度设计；先分析再改；适合初级理解；尽量最小修改。
+
+【环境】
+- Unity 版本：
+- 平台：
+- 2D/3D + 渲染：
+- UI：UGUI / UI Toolkit
+- 输入：旧 Input / New Input System
+- 插件（如有）：
+
+【目标】
+我希望实现：
+
+【现象 / 报错】
+- 复现步骤：
+- 实际发生：
+- 预期发生：
+- Console 报错全文（如有）：
+
+【证据】
+- 相关代码（最小但完整）：
+- Inspector 配置说明（谁挂了脚本？引用拖了哪些？对象是否 active？）
+
+【你要按这个结构回答】
+1) 你认为最可能的 3 个原因（按概率排序）
+2) 每个原因对应的最快验证方法（我该看哪里/加哪行日志）
+3) 最小修复方案（补丁式修改，标出改动点）
+4) 回归测试清单（我改完要测试哪些场景）
+5) 如果后续要更规范，你建议的下一步（不立即实现）</code></pre>
+
+<hr />
+<p class="mini">你可以把这份 HTML 当作团队内部“提问规范”或个人小抄使用。每次贴模板填空，输出质量会稳定提升。</p>
+
+</body>
+</html>
